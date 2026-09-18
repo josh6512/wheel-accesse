@@ -1,7 +1,9 @@
 # Initial database schema
 
-This stage adds the relational model only. No feature APIs, authentication, frontend changes,
-catalog seeds, uploads, aggregation, or moderation workflows are implemented.
+This document describes the relational foundation. Core category, accessibility-feature,
+category-feature, and basic place endpoints are documented separately in [Core API](core-api.md).
+Authentication, frontend product UI, catalog seeds, uploads, aggregation, and moderation workflows
+are not implemented.
 
 ## Models and relationships
 

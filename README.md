@@ -4,9 +4,9 @@ Wheel Accesses is planned as a community-driven accessibility platform. This rep
 contains only the technical foundation: a React web client and an independent Express REST API that
 will later serve the web app, a React Native app, and an administration interface.
 
-The initial database schema is now defined. Product APIs and UI features are not implemented yet.
-See [Database schema](docs/database-schema.md) for all 14 models, relationships, integrity rules,
-privacy/deletion decisions, scenario review, and migration instructions.
+The initial database schema and the first core catalog/place APIs are implemented. Product UI is not
+implemented yet. See [Database schema](docs/database-schema.md) for the data model and integrity
+rules, and [Core API](docs/core-api.md) for the available endpoints and request/response shapes.
 
 ## Architecture
 
@@ -21,7 +21,8 @@ The repository is an npm workspace with two independently buildable packages:
 - `client/` — React, TypeScript, Vite, and React Router. It contains a minimal placeholder page and
   a small API client layer. It never connects to SQL Server directly.
 - `server/` — Express and TypeScript, organized by domain module. It owns environment validation,
-  HTTP security, CORS, structured logging, request validation, errors, Prisma, and API routes.
+  HTTP security, CORS, structured logging, request validation, errors, Prisma, and the category,
+  accessibility-feature, category-feature, place, and health API routes.
 - `server/prisma/` — Initial Prisma models, migration history, and supplemental SQL Server
   constraints. The generated client is ignored and recreated locally; see the schema guide.
 
@@ -114,6 +115,7 @@ Quality, build, and Prisma commands:
 
 ```powershell
 npm run build
+npm run test
 npm run lint
 npm run typecheck
 npm run format:check
@@ -130,6 +132,9 @@ With the API running, request `GET http://localhost:3000/api/v1/health`. It retu
 API and database are available, or `503` with a safe `degraded` response when SQL Server cannot be
 reached.
 
+The core API provides read-only category and accessibility-feature catalogs, category-specific
+feature definitions, and basic place listing/detail/creation. See [Core API](docs/core-api.md).
+
 ## Security and privacy baseline
 
 - External request data can be parsed through shared Zod validation middleware.
@@ -145,7 +150,8 @@ reached.
 
 ## Intentionally not implemented
 
-Authentication, authorization, profile/place/review/accessibility APIs, search, forms, uploads,
-moderation, administration, personalization, matching, maps, caching, and the final interface are
-intentionally absent. Their initial data structures and migration are defined, but no product data
-has been seeded.
+Authentication, authorization, user and mobility-profile APIs, catalog mutations, reviews,
+accessibility reports/answers, advanced search and accessibility filters, duplicate detection,
+uploads, moderation, administration, personalization, matching, maps, caching, and the final
+interface are intentionally absent. Their initial data structures and migration are defined where
+applicable, but no product data has been seeded.
