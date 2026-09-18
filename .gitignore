@@ -5,7 +5,6 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
-server/src/generated/prisma/
 
 # Environment files and secrets
 .env

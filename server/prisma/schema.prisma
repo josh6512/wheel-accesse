@@ -1,10 +1,274 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlserver"
+  url      = env("DATABASE_URL")
 }
 
-// Domain models will be introduced through reviewed migrations in a later stage.
+// SQL Server CHECK constraints and filtered indexes are in constraints.sql.
+// Include that SQL in the initial migration before applying it (see docs/database-schema.md).
+
+model User {
+  id          String    @id @default(uuid()) @db.UniqueIdentifier
+  displayName String?   @map("display_name") @db.NVarChar(100)
+  // Private contact data, not a public profile field or authentication identity.
+  email       String?   @db.NVarChar(254)
+  createdAt   DateTime  @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.DateTime2
+  deletedAt   DateTime? @map("deleted_at") @db.DateTime2
+
+  mobilityTypes UserMobilityType[]
+  createdPlaces Place[]
+  reports       PlaceAccessibilityReport[]
+  reviews       Review[]
+  mediaAssets   MediaAsset[]
+
+  // Email uniqueness/authentication policy is deliberately deferred.
+  @@index([email])
+  @@map("users")
+}
+
+model MobilityType {
+  id           String   @id @default(uuid()) @db.UniqueIdentifier
+  code         String   @unique @db.NVarChar(64)
+  displayName  String   @map("display_name") @db.NVarChar(100)
+  description  String?  @db.NVarChar(1000)
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime2
+
+  users UserMobilityType[]
+
+  @@map("mobility_types")
+}
+
+/// Sensitive association: never serialize with public user data by default.
+model UserMobilityType {
+  userId                  String   @map("user_id") @db.UniqueIdentifier
+  mobilityTypeId          String   @map("mobility_type_id") @db.UniqueIdentifier
+  isPrimary               Boolean  @default(false) @map("is_primary")
+  showPubliclyWithReviews Boolean  @default(false) @map("show_publicly_with_reviews")
+  createdAt               DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt               DateTime @updatedAt @map("updated_at") @db.DateTime2
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  mobilityType MobilityType @relation(fields: [mobilityTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Filtered unique index in constraints.sql allows at most one primary per user.
+  @@id([userId, mobilityTypeId])
+  @@index([mobilityTypeId])
+  @@map("user_mobility_types")
+}
+
+model Category {
+  id           String   @id @default(uuid()) @db.UniqueIdentifier
+  code         String   @unique @db.NVarChar(64)
+  displayName  String   @map("display_name") @db.NVarChar(100)
+  description  String?  @db.NVarChar(1000)
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime2
+
+  places   Place[]
+  features CategoryFeature[]
+
+  @@map("categories")
+}
+
+model Place {
+  id          String    @id @default(uuid()) @db.UniqueIdentifier
+  name        String    @db.NVarChar(200)
+  categoryId  String    @map("category_id") @db.UniqueIdentifier
+  address     String?   @db.NVarChar(500)
+  city        String?   @db.NVarChar(120)
+  region      String?   @db.NVarChar(120)
+  countryCode String?   @map("country_code") @db.NVarChar(2)
+  latitude    Decimal?  @db.Decimal(9, 6)
+  longitude   Decimal?  @db.Decimal(9, 6)
+  createdById String?   @map("created_by_id") @db.UniqueIdentifier
+  createdAt   DateTime  @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.DateTime2
+  deletedAt   DateTime? @map("deleted_at") @db.DateTime2
+
+  category  Category                   @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy User?                      @relation(fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reports   PlaceAccessibilityReport[]
+  reviews   Review[]
+  media     PlaceMedia[]
+
+  @@index([categoryId, deletedAt])
+  @@index([city])
+  @@index([countryCode, city])
+  @@index([name])
+  @@index([createdById])
+  @@map("places")
+}
+
+model AccessibilityFeature {
+  id          String   @id @default(uuid()) @db.UniqueIdentifier
+  code        String   @unique @db.NVarChar(64)
+  displayName String   @map("display_name") @db.NVarChar(120)
+  description String?  @db.NVarChar(1000)
+  // Technical value kinds, not product feature names. SQL CHECK restricts the domain.
+  valueType   String   @map("value_type") @db.NVarChar(16)
+  unit        String?  @db.NVarChar(32)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime2
+
+  categories CategoryFeature[]
+  options    AccessibilityFeatureOption[]
+  answers    PlaceAccessibilityAnswer[]
+
+  // Answers reference both columns to enforce that their kind matches the feature.
+  @@unique([id, valueType])
+  @@map("accessibility_features")
+}
+
+model AccessibilityFeatureOption {
+  id           String   @id @default(uuid()) @db.UniqueIdentifier
+  featureId    String   @map("feature_id") @db.UniqueIdentifier
+  code         String   @db.NVarChar(64)
+  displayName  String   @map("display_name") @db.NVarChar(120)
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime2
+
+  feature AccessibilityFeature       @relation(fields: [featureId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  answers PlaceAccessibilityAnswer[]
+
+  @@unique([featureId, code])
+  // Composite FK prevents selecting an option owned by a different feature.
+  @@unique([id, featureId])
+  @@map("accessibility_feature_options")
+}
+
+model CategoryFeature {
+  categoryId   String   @map("category_id") @db.UniqueIdentifier
+  featureId    String   @map("feature_id") @db.UniqueIdentifier
+  displayOrder Int      @default(0) @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  createdAt    DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime2
+
+  category Category             @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  feature  AccessibilityFeature @relation(fields: [featureId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([categoryId, featureId])
+  @@index([featureId])
+  @@map("category_features")
+}
+
+model PlaceAccessibilityReport {
+  id         String    @id @default(uuid()) @db.UniqueIdentifier
+  placeId    String    @map("place_id") @db.UniqueIdentifier
+  userId     String?   @map("user_id") @db.UniqueIdentifier
+  observedAt DateTime? @map("observed_at") @db.DateTime2
+  createdAt  DateTime  @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.DateTime2
+  deletedAt  DateTime? @map("deleted_at") @db.DateTime2
+
+  place   Place                      @relation(fields: [placeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user    User?                      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  answers PlaceAccessibilityAnswer[]
+
+  // Deliberately no unique(placeId, userId): repeat observations remain independent.
+  @@index([placeId, deletedAt, createdAt])
+  @@index([userId])
+  @@map("place_accessibility_reports")
+}
+
+model PlaceAccessibilityAnswer {
+  reportId     String   @map("report_id") @db.UniqueIdentifier
+  featureId    String   @map("feature_id") @db.UniqueIdentifier
+  valueType    String   @map("value_type") @db.NVarChar(16)
+  booleanValue Boolean? @map("boolean_value")
+  numericValue Decimal? @map("numeric_value") @db.Decimal(18, 4)
+  // Snapshot the catalog unit when reporting; later catalog edits cannot reinterpret history.
+  numericUnit  String?  @map("numeric_unit") @db.NVarChar(32)
+  textValue    String?  @map("text_value") @db.NVarChar(2000)
+  optionId     String?  @map("option_id") @db.UniqueIdentifier
+  createdAt    DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime2
+
+  report  PlaceAccessibilityReport    @relation(fields: [reportId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  feature AccessibilityFeature        @relation(fields: [featureId, valueType], references: [id, valueType], onDelete: NoAction, onUpdate: NoAction)
+  option  AccessibilityFeatureOption? @relation(fields: [optionId, featureId], references: [id, featureId], onDelete: NoAction, onUpdate: NoAction)
+
+  // One answer per feature per report; absence means unknown, never false.
+  @@id([reportId, featureId])
+  @@index([featureId, valueType])
+  @@index([optionId, featureId])
+  @@map("place_accessibility_answers")
+}
+
+model Review {
+  id        String    @id @default(uuid()) @db.UniqueIdentifier
+  placeId   String    @map("place_id") @db.UniqueIdentifier
+  userId    String?   @map("user_id") @db.UniqueIdentifier
+  body      String    @db.NVarChar(4000)
+  createdAt DateTime  @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime2
+  deletedAt DateTime? @map("deleted_at") @db.DateTime2
+
+  place Place         @relation(fields: [placeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user  User?         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  media ReviewMedia[]
+
+  @@index([placeId, deletedAt, createdAt])
+  @@index([userId])
+  @@map("reviews")
+}
+
+model MediaAsset {
+  id         String    @id @default(uuid()) @db.UniqueIdentifier
+  // Stable opaque key in one configured object-storage namespace, never a signed URL.
+  storageKey String    @unique @map("storage_key") @db.NVarChar(400)
+  mimeType   String    @map("mime_type") @db.NVarChar(100)
+  uploaderId String?   @map("uploader_id") @db.UniqueIdentifier
+  altText    String?   @map("alt_text") @db.NVarChar(1000)
+  createdAt  DateTime  @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.DateTime2
+  deletedAt  DateTime? @map("deleted_at") @db.DateTime2
+
+  uploader User?         @relation(fields: [uploaderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  places   PlaceMedia[]
+  reviews  ReviewMedia[]
+
+  @@index([uploaderId])
+  @@map("media_assets")
+}
+
+model PlaceMedia {
+  placeId      String   @map("place_id") @db.UniqueIdentifier
+  mediaAssetId String   @map("media_asset_id") @db.UniqueIdentifier
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+
+  place      Place      @relation(fields: [placeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([placeId, mediaAssetId])
+  @@index([mediaAssetId])
+  @@map("place_media")
+}
+
+model ReviewMedia {
+  reviewId     String   @map("review_id") @db.UniqueIdentifier
+  mediaAssetId String   @map("media_asset_id") @db.UniqueIdentifier
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+
+  review     Review     @relation(fields: [reviewId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([reviewId, mediaAssetId])
+  @@index([mediaAssetId])
+  @@map("review_media")
+}
