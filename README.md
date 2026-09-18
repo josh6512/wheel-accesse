@@ -4,9 +4,10 @@ Wheel Accesses is planned as a community-driven accessibility platform. This rep
 contains only the technical foundation: a React web client and an independent Express REST API that
 will later serve the web app, a React Native app, and an administration interface.
 
-The initial database schema and the first core catalog/place APIs are implemented. Product UI is not
-implemented yet. See [Database schema](docs/database-schema.md) for the data model and integrity
-rules, and [Core API](docs/core-api.md) for the available endpoints and request/response shapes.
+The initial database schema, core catalog/place APIs, and community review/accessibility-report read
+APIs are implemented. Product UI is not implemented yet. See [Database schema](docs/database-schema.md)
+for the data model, [Core API](docs/core-api.md) for catalog/place endpoints, and
+[Community content API](docs/community-content-api.md) for reviews and structured reports.
 
 ## Architecture
 
@@ -22,7 +23,7 @@ The repository is an npm workspace with two independently buildable packages:
   a small API client layer. It never connects to SQL Server directly.
 - `server/` — Express and TypeScript, organized by domain module. It owns environment validation,
   HTTP security, CORS, structured logging, request validation, errors, Prisma, and the category,
-  accessibility-feature, category-feature, place, and health API routes.
+  accessibility-feature, category-feature, place, review, accessibility-report, and health routes.
 - `server/prisma/` — Initial Prisma models, migration history, and supplemental SQL Server
   constraints. The generated client is ignored and recreated locally; see the schema guide.
 
@@ -134,6 +135,9 @@ reached.
 
 The core API provides read-only category and accessibility-feature catalogs, category-specific
 feature definitions, and basic place listing/detail/creation. See [Core API](docs/core-api.md).
+Community read APIs return independent plain-text reviews and typed accessibility reports. Their
+write routes remain deferred until authentication can supply trusted ownership. See
+[Community content API](docs/community-content-api.md).
 
 ## Security and privacy baseline
 
@@ -150,8 +154,8 @@ feature definitions, and basic place listing/detail/creation. See [Core API](doc
 
 ## Intentionally not implemented
 
-Authentication, authorization, user and mobility-profile APIs, catalog mutations, reviews,
-accessibility reports/answers, advanced search and accessibility filters, duplicate detection,
-uploads, moderation, administration, personalization, matching, maps, caching, and the final
-interface are intentionally absent. Their initial data structures and migration are defined where
-applicable, but no product data has been seeded.
+Authentication, authorization, user and mobility-profile APIs, catalog mutations, review/report
+write endpoints, accessibility aggregation, advanced search and accessibility filters, duplicate
+detection, uploads, moderation, administration, personalization, matching, maps, caching, and the
+final interface are intentionally absent. Their initial data structures and migration are defined
+where applicable, but no product data has been seeded.

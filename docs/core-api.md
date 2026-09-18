@@ -1,8 +1,9 @@
 # Core API
 
 The first Wheel Accesses application API exposes database-driven category and accessibility-feature
-metadata plus basic place reads and creation. It does not implement authentication, catalog
-mutations, accessibility reporting, reviews, advanced search, or frontend UI.
+metadata plus basic place reads and creation. Review and structured-report reads are documented in
+[Community content API](community-content-api.md). Authentication, catalog mutations, advanced
+search, and frontend UI are not implemented.
 
 All routes are under `/api/v1`. Successful resource responses use a `data` envelope. Validation is
 strict: unknown body/query properties and malformed UUIDs are rejected with HTTP 400.
