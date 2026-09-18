@@ -1,11 +1,12 @@
 # Wheel Accesses
 
-Wheel Accesses is planned as a community-driven accessibility platform. This repository currently
-contains only the technical foundation: a React web client and an independent Express REST API that
-will later serve the web app, a React Native app, and an administration interface.
+Wheel Accesses is planned as a community-driven accessibility platform. This repository contains a
+React web search experience and an independent Express REST API that can later also serve a React
+Native app and an administration interface.
 
 The initial database schema, core catalog/place APIs, category-driven place search, and community
-review/accessibility-report read APIs are implemented. Product UI is not implemented yet. See
+review/accessibility-report read APIs are implemented. The web client provides the first Home →
+Search → Results → Accessibility Filters flow. See
 [Database schema](docs/database-schema.md) for the data model, [Core API](docs/core-api.md) for
 catalog/place endpoints, [Place search API](docs/place-search-api.md) for filtering and consensus,
 and [Community content API](docs/community-content-api.md) for reviews and structured reports.
@@ -20,8 +21,9 @@ Admin interface ──┘
 
 The repository is an npm workspace with two independently buildable packages:
 
-- `client/` — React, TypeScript, Vite, and React Router. It contains a minimal placeholder page and
-  a small API client layer. It never connects to SQL Server directly.
+- `client/` — React, TypeScript, Vite, and React Router. It contains responsive home and search
+  pages, a typed API layer, dynamic category-driven filters, place cards, pagination, and focused
+  Vitest/Testing Library coverage. It never connects to SQL Server directly.
 - `server/` — Express and TypeScript, organized by domain module. It owns environment validation,
   HTTP security, CORS, structured logging, request validation, errors, Prisma, and the category,
   accessibility-feature, category-feature, place, review, accessibility-report, and health routes.
@@ -140,6 +142,10 @@ feature definitions, and place search/detail/creation. See [Core API](docs/core-
 Community read APIs return independent plain-text reviews and typed accessibility reports. Their
 write routes remain deferred until authentication can supply trusted ownership. See
 [Community content API](docs/community-content-api.md).
+
+The web app provides `/` and `/search`. Search state is stored in the URL so it can be refreshed,
+shared, and preserved during pagination. The category and Boolean accessibility filter labels are
+loaded from the API rather than hard-coded in the client.
 
 ## Security and privacy baseline
 

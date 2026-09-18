@@ -1,3 +1,5 @@
+import type { ApiErrorResponse } from '../types/api';
+
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api/v1';
 
 export class ApiError extends Error {
@@ -20,7 +22,14 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   });
 
   if (!response.ok) {
-    throw new ApiError('The request could not be completed.', response.status);
+    let message = 'The request could not be completed.';
+    try {
+      const body = (await response.json()) as Partial<ApiErrorResponse>;
+      if (body.error?.message) message = body.error.message;
+    } catch {
+      // Keep the safe fallback when the response is not JSON.
+    }
+    throw new ApiError(message, response.status);
   }
 
   return (await response.json()) as T;
