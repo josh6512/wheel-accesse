@@ -4,10 +4,11 @@ Wheel Accesses is planned as a community-driven accessibility platform. This rep
 contains only the technical foundation: a React web client and an independent Express REST API that
 will later serve the web app, a React Native app, and an administration interface.
 
-The initial database schema, core catalog/place APIs, and community review/accessibility-report read
-APIs are implemented. Product UI is not implemented yet. See [Database schema](docs/database-schema.md)
-for the data model, [Core API](docs/core-api.md) for catalog/place endpoints, and
-[Community content API](docs/community-content-api.md) for reviews and structured reports.
+The initial database schema, core catalog/place APIs, category-driven place search, and community
+review/accessibility-report read APIs are implemented. Product UI is not implemented yet. See
+[Database schema](docs/database-schema.md) for the data model, [Core API](docs/core-api.md) for
+catalog/place endpoints, [Place search API](docs/place-search-api.md) for filtering and consensus,
+and [Community content API](docs/community-content-api.md) for reviews and structured reports.
 
 ## Architecture
 
@@ -134,7 +135,8 @@ API and database are available, or `503` with a safe `degraded` response when SQ
 reached.
 
 The core API provides read-only category and accessibility-feature catalogs, category-specific
-feature definitions, and basic place listing/detail/creation. See [Core API](docs/core-api.md).
+feature definitions, and place search/detail/creation. See [Core API](docs/core-api.md) and
+[Place search API](docs/place-search-api.md).
 Community read APIs return independent plain-text reviews and typed accessibility reports. Their
 write routes remain deferred until authentication can supply trusted ownership. See
 [Community content API](docs/community-content-api.md).
@@ -155,7 +157,7 @@ write routes remain deferred until authentication can supply trusted ownership. 
 ## Intentionally not implemented
 
 Authentication, authorization, user and mobility-profile APIs, catalog mutations, review/report
-write endpoints, accessibility aggregation, advanced search and accessibility filters, duplicate
-detection, uploads, moderation, administration, personalization, matching, maps, caching, and the
-final interface are intentionally absent. Their initial data structures and migration are defined
-where applicable, but no product data has been seeded.
+write endpoints, non-Boolean accessibility filters, relevance ranking, duplicate detection,
+uploads, moderation, administration, personalization, matching, maps, caching, and the final
+interface are intentionally absent. Their initial data structures and migration are defined where
+applicable, but no product data has been seeded.

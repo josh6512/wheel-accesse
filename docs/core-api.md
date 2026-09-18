@@ -1,9 +1,10 @@
 # Core API
 
 The first Wheel Accesses application API exposes database-driven category and accessibility-feature
-metadata plus basic place reads and creation. Review and structured-report reads are documented in
-[Community content API](community-content-api.md). Authentication, catalog mutations, advanced
-search, and frontend UI are not implemented.
+metadata plus place search, reads, and creation. Review and structured-report reads are documented
+in [Community content API](community-content-api.md). The search contract and consensus rules are
+documented in [Place search API](place-search-api.md). Authentication, catalog mutations, and
+frontend UI are not implemented.
 
 All routes are under `/api/v1`. Successful resource responses use a `data` envelope. Validation is
 strict: unknown body/query properties and malformed UUIDs are rejected with HTTP 400.
@@ -95,7 +96,8 @@ This endpoint is suitable for building data-driven forms without hard-coded cate
 ## Places
 
 Deleted places and places assigned to inactive categories are not returned by public reads.
-Accessibility reports and reviews are intentionally excluded.
+The detail response excludes accessibility reports and reviews. Search returns only aggregate
+counts and statuses; it never returns reporter identities.
 
 ### `GET /places/:id`
 
@@ -110,11 +112,16 @@ Supported query parameters:
 | `category` | Category UUID                       | none    |
 | `city`     | Non-empty text, at most 120 chars   | none    |
 | `country`  | Two ASCII letters; normalized upper | none    |
+| `q`        | Name substring, at most 200 chars   | none    |
+| `features` | Boolean feature filters; see below  | none    |
 | `page`     | Integer from 1 through 100,000      | 1       |
 | `pageSize` | Integer from 1 through 100          | 20      |
 
 Filtering, counting, ordering, and pagination execute in SQL through Prisma. Results are ordered by
-creation time and ID, both descending.
+creation time and ID, both descending. Accessibility filters require a category and use the format
+`features=<feature-uuid>:true,<feature-uuid>:false`. Every requested filter must match, and each
+feature must be an active Boolean feature configured for that active category. See
+[Place search API](place-search-api.md) for the complete contract and consensus behavior.
 
 ```json
 {
