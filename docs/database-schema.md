@@ -2,8 +2,8 @@
 
 This document describes the relational foundation. Core category, accessibility-feature,
 category-feature, and basic place endpoints are documented separately in [Core API](core-api.md).
-Authentication, frontend product UI, catalog seeds, uploads, aggregation, and moderation workflows
-are not implemented.
+Authentication, uploads, aggregation, and moderation workflows are not implemented. The initial
+catalog seed is documented in [Initial product catalog](product-catalog.md).
 
 ## Models and relationships
 
@@ -187,7 +187,8 @@ server/prisma/migrations/20260916122623_initial_schema/migration.sql
 
 It contains the six supplemental rules from `constraints.sql` before its single `COMMIT TRAN`, so
 table creation and custom integrity are atomic. Prisma applied it successfully and reports the
-database in sync. No catalog seed or application data was inserted.
+database in sync. Product configuration is populated separately by the idempotent catalog seed;
+the migration itself inserts no application data.
 
 The project uses matching Prisma CLI and Client version 6.19.3 with Prisma's built-in SQL Server
 query engine. The Prisma 7 `@prisma/adapter-mssql` dependency was removed because its runtime driver

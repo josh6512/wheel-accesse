@@ -19,6 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prisma:generate": "npm run prisma:generate -w server",
+    "prisma:seed": "npm run prisma:seed -w server",
     "prisma:migrate:dev": "npm run prisma:migrate:dev -w server",
     "prisma:migrate:deploy": "npm run prisma:migrate:deploy -w server"
   },

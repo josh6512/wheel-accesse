@@ -33,7 +33,8 @@ The repository is an npm workspace with two independently buildable packages:
 Future backend features should be added as cohesive folders under `server/src/modules/`. Each
 module can own only the routes, controller, service, validation, and data access that it needs.
 Categories, mobility types, accessibility attributes, and select options are modeled as configurable
-database data. No product catalog data has been seeded.
+database data. The initial product configuration is maintained through an idempotent Prisma seed;
+see [Initial product catalog](docs/product-catalog.md).
 
 ## Technology and prerequisites
 
@@ -124,6 +125,7 @@ npm run lint
 npm run typecheck
 npm run format:check
 npm run prisma:generate
+npm run prisma:seed
 npm run prisma:migrate:dev
 npm run prisma:migrate:deploy
 ```
@@ -166,4 +168,4 @@ Authentication, authorization, user and mobility-profile APIs, catalog mutations
 write endpoints, non-Boolean accessibility filters, relevance ranking, duplicate detection,
 uploads, moderation, administration, personalization, matching, maps, caching, and the final
 interface are intentionally absent. Their initial data structures and migration are defined where
-applicable, but no product data has been seeded.
+applicable; only the documented initial product catalog configuration is seeded.
