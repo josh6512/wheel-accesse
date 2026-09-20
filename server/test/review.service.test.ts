@@ -20,6 +20,17 @@ const review: ReviewRecord = {
   updatedAt: now,
   place: { id: placeId, name: 'Temporary place' },
   user: { id: userId, displayName: 'Test author', deletedAt: null },
+  media: [
+    {
+      displayOrder: 1,
+      mediaAsset: {
+        id: '44444444-4444-4444-8444-444444444444',
+        storageKey: 'https://media.example.test/review.jpg',
+        mimeType: 'image/jpeg',
+        altText: 'Accessible dining area',
+      },
+    },
+  ],
 };
 
 function repository(overrides: Partial<ReviewRepository> = {}): ReviewRepository {
@@ -74,6 +85,13 @@ describe('review reads', () => {
   it('exposes only the public author projection', async () => {
     const result = await getReview(reviewId, repository());
     assert.deepEqual(result.author, { id: userId, displayName: 'Test author' });
+    assert.deepEqual(result.media[0], {
+      id: '44444444-4444-4444-8444-444444444444',
+      storageReference: 'https://media.example.test/review.jpg',
+      mimeType: 'image/jpeg',
+      altText: 'Accessible dining area',
+      displayOrder: 1,
+    });
     assert.equal(result.author !== null && 'email' in result.author, false);
     assert.equal(result.author !== null && 'mobilityTypes' in result.author, false);
   });

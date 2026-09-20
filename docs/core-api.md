@@ -95,13 +95,21 @@ This endpoint is suitable for building data-driven forms without hard-coded cate
 
 ## Places
 
-Deleted places and places assigned to inactive categories are not returned by public reads.
-The detail response excludes accessibility reports and reviews. Search returns only aggregate
-counts and statuses; it never returns reporter identities.
+Deleted places and places assigned to inactive categories are not returned by public reads. Search
+and place details return only aggregate counts and statuses; they never return reporter identities.
 
 ### `GET /places/:id`
 
 Returns general place fields and a compact category object. Creator information is not exposed.
+The existing fields are supplemented with ordered `media`, `reviewCount`,
+`accessibilityReportCount`, and an ordered `accessibility` summary for every active Boolean feature
+mapped to the place category.
+
+Each media item contains `id`, `storageReference`, nullable `altText`, `mimeType`, and
+`displayOrder`. The storage reference is an opaque public/external reference, never a credential or
+upload token. Each accessibility item contains compact feature metadata, the shared consensus
+`status`, `positiveReports`, and `negativeReports`. See
+[Place Details](place-details.md) for the complete frontend and evidence behavior.
 
 ### `GET /places`
 

@@ -9,7 +9,8 @@ review/accessibility-report read APIs are implemented. The web client provides t
 Search → Results → Accessibility Filters flow. See
 [Database schema](docs/database-schema.md) for the data model, [Core API](docs/core-api.md) for
 catalog/place endpoints, [Place search API](docs/place-search-api.md) for filtering and consensus,
-and [Community content API](docs/community-content-api.md) for reviews and structured reports.
+and [Community content API](docs/community-content-api.md) for reviews and structured reports. The
+read-only [Place Details experience](docs/place-details.md) combines these contracts for one place.
 
 ## Architecture
 
@@ -145,9 +146,11 @@ Community read APIs return independent plain-text reviews and typed accessibilit
 write routes remain deferred until authentication can supply trusted ownership. See
 [Community content API](docs/community-content-api.md).
 
-The web app provides `/` and `/search`. Search state is stored in the URL so it can be refreshed,
-shared, and preserved during pagination. The category and Boolean accessibility filter labels are
-loaded from the API rather than hard-coded in the client.
+The web app provides `/`, `/search`, and `/places/:placeId`. Search state is stored in the URL so it
+can be refreshed, shared, and preserved during pagination. The category and Boolean accessibility
+filter labels are loaded from the API rather than hard-coded in the client. Place Details provides
+ordered media/fallback presentation, shared Boolean consensus, typed report evidence, and paginated
+reviews without enabling unauthenticated writes.
 
 ## Security and privacy baseline
 

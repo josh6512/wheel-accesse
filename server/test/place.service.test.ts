@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Prisma } from '@prisma/client';
-import type { PlaceRecord, PlaceRepository } from '../src/modules/places/place.repository.js';
+import type {
+  PlaceAccessibilitySummaryRow,
+  PlaceDetailsRecord,
+  PlaceRecord,
+  PlaceRepository,
+} from '../src/modules/places/place.repository.js';
 import { createPlace, getPlace, listPlaces } from '../src/modules/places/place.service.js';
 import {
   createPlaceBodySchema,
@@ -31,9 +36,48 @@ const place: PlaceRecord = {
   },
 };
 
+const placeDetails: PlaceDetailsRecord = {
+  ...place,
+  media: [
+    {
+      displayOrder: 10,
+      mediaAsset: {
+        id: '77777777-7777-4777-8777-777777777777',
+        storageKey: 'https://media.example.test/place.jpg',
+        mimeType: 'image/jpeg',
+        altText: 'Step-free entrance at Temporary place',
+      },
+    },
+  ],
+  _count: { reviews: 3, reports: 4 },
+};
+
+function summary(
+  featureId: string,
+  positiveReports: number,
+  negativeReports: number,
+): PlaceAccessibilitySummaryRow {
+  return {
+    featureId,
+    featureCode: `feature-${featureId.at(-1)}`,
+    featureDisplayName: `Feature ${featureId.at(-1)}`,
+    featureDescription: null,
+    positiveReports: BigInt(positiveReports),
+    negativeReports: BigInt(negativeReports),
+  };
+}
+
+const accessibilitySummaries = [
+  summary('10000000-0000-4000-8000-000000000001', 3, 1),
+  summary('10000000-0000-4000-8000-000000000002', 1, 3),
+  summary('10000000-0000-4000-8000-000000000003', 2, 2),
+  summary('10000000-0000-4000-8000-000000000004', 0, 0),
+];
+
 function repository(overrides: Partial<PlaceRepository> = {}): PlaceRepository {
   return {
-    findById: async () => place,
+    findDetailsById: async () => placeDetails,
+    findBooleanAccessibilitySummary: async () => accessibilitySummaries,
     findActiveCategoryById: async () => ({ id: categoryId }),
     create: async () => place,
     findMany: async () => ({ items: [place], total: 1 }),
@@ -109,9 +153,23 @@ describe('place service', () => {
   });
 
   it('retrieves a place and returns not found when absent', async () => {
-    assert.equal((await getPlace(placeId, repository())).id, placeId);
+    const result = await getPlace(placeId, repository());
+    assert.equal(result.id, placeId);
+    assert.equal(result.reviewCount, 3);
+    assert.equal(result.accessibilityReportCount, 4);
+    assert.deepEqual(
+      result.accessibility.map(({ status }) => status),
+      ['SUPPORTED', 'NOT_SUPPORTED', 'CONFLICTING', 'UNKNOWN'],
+    );
+    assert.deepEqual(result.media[0], {
+      id: '77777777-7777-4777-8777-777777777777',
+      storageReference: 'https://media.example.test/place.jpg',
+      mimeType: 'image/jpeg',
+      altText: 'Step-free entrance at Temporary place',
+      displayOrder: 10,
+    });
     await assert.rejects(
-      () => getPlace(placeId, repository({ findById: async () => null })),
+      () => getPlace(placeId, repository({ findDetailsById: async () => null })),
       (error: unknown) =>
         error instanceof ApiError && error.statusCode === 404 && error.code === 'PLACE_NOT_FOUND',
     );

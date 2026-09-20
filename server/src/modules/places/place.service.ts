@@ -1,6 +1,13 @@
 import { Prisma } from '@prisma/client';
+import { deriveAccessibilityStatus } from '../search/search.aggregation.js';
 import { ApiError } from '../../utils/ApiError.js';
-import { placeRepository, type PlaceRecord, type PlaceRepository } from './place.repository.js';
+import {
+  placeRepository,
+  type PlaceAccessibilitySummaryRow,
+  type PlaceDetailsRecord,
+  type PlaceRecord,
+  type PlaceRepository,
+} from './place.repository.js';
 import type { CreatePlaceInput, ListPlaceQuery } from './place.validation.js';
 
 export interface PlaceResponse {
@@ -33,6 +40,29 @@ export interface PaginatedPlaces {
   };
 }
 
+export interface PlaceDetailsResponse extends PlaceResponse {
+  media: Array<{
+    id: string;
+    storageReference: string;
+    altText: string | null;
+    mimeType: string;
+    displayOrder: number;
+  }>;
+  reviewCount: number;
+  accessibilityReportCount: number;
+  accessibility: Array<{
+    feature: {
+      id: string;
+      code: string;
+      displayName: string;
+      description: string | null;
+    };
+    status: 'SUPPORTED' | 'NOT_SUPPORTED' | 'CONFLICTING' | 'UNKNOWN';
+    positiveReports: number;
+    negativeReports: number;
+  }>;
+}
+
 function toPlaceResponse(place: PlaceRecord): PlaceResponse {
   return {
     ...place,
@@ -41,15 +71,59 @@ function toPlaceResponse(place: PlaceRecord): PlaceResponse {
   };
 }
 
+function safeCount(value: bigint): number {
+  const count = Number(value);
+  if (!Number.isSafeInteger(count)) {
+    throw new Error('A place accessibility aggregate exceeded the safe integer range.');
+  }
+  return count;
+}
+
+function toAccessibilitySummary(row: PlaceAccessibilitySummaryRow) {
+  const positiveReports = safeCount(row.positiveReports);
+  const negativeReports = safeCount(row.negativeReports);
+  return {
+    feature: {
+      id: row.featureId,
+      code: row.featureCode,
+      displayName: row.featureDisplayName,
+      description: row.featureDescription,
+    },
+    status: deriveAccessibilityStatus(positiveReports, negativeReports),
+    positiveReports,
+    negativeReports,
+  };
+}
+
+function toPlaceDetailsResponse(
+  place: PlaceDetailsRecord,
+  accessibility: PlaceAccessibilitySummaryRow[],
+): PlaceDetailsResponse {
+  return {
+    ...toPlaceResponse(place),
+    media: place.media.map(({ displayOrder, mediaAsset }) => ({
+      id: mediaAsset.id,
+      storageReference: mediaAsset.storageKey,
+      altText: mediaAsset.altText,
+      mimeType: mediaAsset.mimeType,
+      displayOrder,
+    })),
+    reviewCount: place._count.reviews,
+    accessibilityReportCount: place._count.reports,
+    accessibility: accessibility.map(toAccessibilitySummary),
+  };
+}
+
 export async function getPlace(
   id: string,
   repository: PlaceRepository = placeRepository,
-): Promise<PlaceResponse> {
-  const place = await repository.findById(id);
+): Promise<PlaceDetailsResponse> {
+  const place = await repository.findDetailsById(id);
   if (!place) {
     throw new ApiError(404, 'PLACE_NOT_FOUND', 'The requested place was not found.');
   }
-  return toPlaceResponse(place);
+  const accessibility = await repository.findBooleanAccessibilitySummary(id);
+  return toPlaceDetailsResponse(place, accessibility);
 }
 
 export async function createPlace(

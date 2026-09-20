@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../db/prisma.js';
 import type { CreatePlaceInput, ListPlaceQuery } from './place.validation.js';
 
@@ -24,13 +24,50 @@ const placeSelect = {
 
 export type PlaceRecord = Prisma.PlaceGetPayload<{ select: typeof placeSelect }>;
 
+const placeDetailsSelect = {
+  ...placeSelect,
+  media: {
+    where: { mediaAsset: { deletedAt: null } },
+    orderBy: [{ displayOrder: 'asc' }, { mediaAssetId: 'asc' }],
+    select: {
+      displayOrder: true,
+      mediaAsset: {
+        select: {
+          id: true,
+          storageKey: true,
+          mimeType: true,
+          altText: true,
+        },
+      },
+    },
+  },
+  _count: {
+    select: {
+      reviews: { where: { deletedAt: null } },
+      reports: { where: { deletedAt: null } },
+    },
+  },
+} satisfies Prisma.PlaceSelect;
+
+export type PlaceDetailsRecord = Prisma.PlaceGetPayload<{ select: typeof placeDetailsSelect }>;
+
+export interface PlaceAccessibilitySummaryRow {
+  featureId: string;
+  featureCode: string;
+  featureDisplayName: string;
+  featureDescription: string | null;
+  positiveReports: bigint;
+  negativeReports: bigint;
+}
+
 export interface PlaceListResult {
   items: PlaceRecord[];
   total: number;
 }
 
 export interface PlaceRepository {
-  findById(id: string): Promise<PlaceRecord | null>;
+  findDetailsById(id: string): Promise<PlaceDetailsRecord | null>;
+  findBooleanAccessibilitySummary(id: string): Promise<PlaceAccessibilitySummaryRow[]>;
   findActiveCategoryById(categoryId: string): Promise<{ id: string } | null>;
   create(input: CreatePlaceInput): Promise<PlaceRecord>;
   findMany(query: ListPlaceQuery): Promise<PlaceListResult>;
@@ -47,11 +84,48 @@ function activePlaceWhere(query: ListPlaceQuery): Prisma.PlaceWhereInput {
 }
 
 export const placeRepository: PlaceRepository = {
-  findById: (id) =>
+  findDetailsById: (id) =>
     prisma.place.findFirst({
       where: { id, deletedAt: null, category: { isActive: true } },
-      select: placeSelect,
+      select: placeDetailsSelect,
     }),
+  findBooleanAccessibilitySummary: (id) =>
+    prisma.$queryRaw<PlaceAccessibilitySummaryRow[]>(Prisma.sql`
+      SELECT
+        [feature].[id] AS [featureId],
+        [feature].[code] AS [featureCode],
+        [feature].[display_name] AS [featureDisplayName],
+        [feature].[description] AS [featureDescription],
+        SUM(CASE WHEN [answer].[boolean_value] = 1 THEN CAST(1 AS BIGINT) ELSE CAST(0 AS BIGINT) END)
+          AS [positiveReports],
+        SUM(CASE WHEN [answer].[boolean_value] = 0 THEN CAST(1 AS BIGINT) ELSE CAST(0 AS BIGINT) END)
+          AS [negativeReports]
+      FROM [dbo].[places] AS [place]
+      INNER JOIN [dbo].[category_features] AS [mapping]
+        ON [mapping].[category_id] = [place].[category_id] AND [mapping].[is_active] = 1
+      INNER JOIN [dbo].[accessibility_features] AS [feature]
+        ON [feature].[id] = [mapping].[feature_id]
+        AND [feature].[is_active] = 1
+        AND [feature].[value_type] = N'boolean'
+      LEFT JOIN [dbo].[place_accessibility_reports] AS [report]
+        ON [report].[place_id] = [place].[id] AND [report].[deleted_at] IS NULL
+      LEFT JOIN [dbo].[place_accessibility_answers] AS [answer]
+        ON [answer].[report_id] = [report].[id]
+        AND [answer].[feature_id] = [feature].[id]
+        AND [answer].[value_type] = N'boolean'
+      WHERE [place].[id] = CAST(${id} AS UNIQUEIDENTIFIER)
+        AND [place].[deleted_at] IS NULL
+      GROUP BY
+        [mapping].[display_order],
+        [feature].[id],
+        [feature].[code],
+        [feature].[display_name],
+        [feature].[description]
+      ORDER BY
+        [mapping].[display_order],
+        [feature].[display_name],
+        [feature].[id]
+    `),
   findActiveCategoryById: (categoryId) =>
     prisma.category.findFirst({
       where: { id: categoryId, isActive: true },

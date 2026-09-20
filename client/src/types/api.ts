@@ -70,3 +70,70 @@ export interface PlaceSearchResponse {
   data: PlaceSearchResult[];
   pagination: Pagination;
 }
+
+export interface PublicMedia {
+  id: string;
+  storageReference: string;
+  altText: string | null;
+  mimeType: string;
+  displayOrder: number;
+}
+
+export interface AccessibilitySummary {
+  feature: Pick<CategoryFeature, 'id' | 'code' | 'displayName' | 'description'>;
+  status: AccessibilityStatus;
+  positiveReports: number;
+  negativeReports: number;
+}
+
+export interface PlaceDetails extends Omit<PlaceSearchResult, 'accessibility' | 'reviewCount'> {
+  media: PublicMedia[];
+  accessibility: AccessibilitySummary[];
+  reviewCount: number;
+  accessibilityReportCount: number;
+}
+
+export interface PublicReview {
+  id: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  place: { id: string; name: string };
+  author: { id: string; displayName: string | null } | null;
+  media: PublicMedia[];
+}
+
+export interface PaginatedReviews {
+  data: PublicReview[];
+  pagination: Pagination;
+}
+
+export type AccessibilityAnswerValue =
+  | { type: 'boolean'; value: boolean }
+  | { type: 'numeric'; value: string; unit: string | null }
+  | { type: 'text'; value: string }
+  | {
+      type: 'select';
+      option: { id: string; code: string; displayName: string };
+    };
+
+export interface PublicAccessibilityReport {
+  id: string;
+  observedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  place: { id: string; name: string };
+  author: { id: string; displayName: string | null } | null;
+  answers: Array<{
+    feature: Pick<
+      CategoryFeature,
+      'id' | 'code' | 'displayName' | 'description' | 'valueType' | 'unit'
+    >;
+    value: AccessibilityAnswerValue;
+  }>;
+}
+
+export interface PaginatedAccessibilityReports {
+  data: PublicAccessibilityReport[];
+  pagination: Pagination;
+}

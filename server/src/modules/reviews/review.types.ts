@@ -11,6 +11,13 @@ export interface PublicReview {
     id: string;
     displayName: string | null;
   } | null;
+  media: Array<{
+    id: string;
+    storageReference: string;
+    altText: string | null;
+    mimeType: string;
+    displayOrder: number;
+  }>;
 }
 
 export interface PaginatedReviews {

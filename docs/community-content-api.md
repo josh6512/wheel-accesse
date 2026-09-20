@@ -53,6 +53,10 @@ Review bodies are stored and returned as plain text. Clients must render them as
 trusted HTML. Future authenticated review submission accepts a strict body containing only `body`,
 trims whitespace, rejects blank text, and permits at most 4,000 characters.
 
+Reviews also include an ordered `media` array with safe media asset ID, external storage reference,
+alt text, MIME type, and display order. Upload and delete operations remain unavailable. The Place
+Details client renders only HTTP(S) image references and otherwise omits the unresolved media item.
+
 ## Structured accessibility reports
 
 ### `GET /places/:placeId/accessibility-reports`
@@ -105,6 +109,9 @@ Typed values have these shapes:
   preserve database precision and the unit is the report-time snapshot.
 - Text: `{ "type": "text", "value": "Plain observation" }`
 - Select: `{ "type": "select", "option": { "id": "...", "code": "...", "displayName": "..." } }`
+
+Place Details presents numeric, select, and text answers only as individual report evidence. It
+does not invent an aggregate status for non-Boolean values and does not render reporter attribution.
 
 ## Privacy
 

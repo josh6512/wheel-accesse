@@ -14,6 +14,13 @@ function toPublicReview(review: ReviewRecord): PublicReview {
       review.user && review.user.deletedAt === null
         ? { id: review.user.id, displayName: review.user.displayName }
         : null,
+    media: review.media.map(({ displayOrder, mediaAsset }) => ({
+      id: mediaAsset.id,
+      storageReference: mediaAsset.storageKey,
+      altText: mediaAsset.altText,
+      mimeType: mediaAsset.mimeType,
+      displayOrder,
+    })),
   };
 }
 

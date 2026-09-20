@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
 import { HomePage } from './pages/HomePage';
+import { PlaceDetailsPage } from './pages/PlaceDetailsPage';
 import { SearchPage } from './pages/SearchPage';
 
 export function App() {
@@ -9,6 +10,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/places/:placeId" element={<PlaceDetailsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

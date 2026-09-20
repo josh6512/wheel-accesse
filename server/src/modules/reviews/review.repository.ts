@@ -20,6 +20,21 @@ const reviewSelect = {
       deletedAt: true,
     },
   },
+  media: {
+    where: { mediaAsset: { deletedAt: null } },
+    orderBy: [{ displayOrder: 'asc' }, { mediaAssetId: 'asc' }],
+    select: {
+      displayOrder: true,
+      mediaAsset: {
+        select: {
+          id: true,
+          storageKey: true,
+          mimeType: true,
+          altText: true,
+        },
+      },
+    },
+  },
 } satisfies Prisma.ReviewSelect;
 
 export type ReviewRecord = Prisma.ReviewGetPayload<{ select: typeof reviewSelect }>;
