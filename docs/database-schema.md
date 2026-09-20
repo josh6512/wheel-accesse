@@ -2,7 +2,8 @@
 
 This document describes the relational foundation. Core category, accessibility-feature,
 category-feature, and basic place endpoints are documented separately in [Core API](core-api.md).
-Authentication, uploads, aggregation, and moderation workflows are not implemented. The initial
+Authentication now has an additive credential/session extension documented in [Authentication](authentication.md).
+Uploads and moderation workflows are not implemented. The initial
 catalog seed is documented in [Initial product catalog](product-catalog.md).
 
 ## Models and relationships
@@ -96,7 +97,7 @@ likewise do not repurpose an option code to mean something else after it is used
   relationship lookups. Composite unique keys also support their leftmost prefix lookups.
 - Coordinates must be both absent or both present and within latitude/longitude bounds.
 - `countryCode` is an optional two-character country code; validate actual codes in future APIs.
-- Email is nullable and indexed, deliberately not unique before authentication/identity rules exist.
+- Legacy contact email remains nullable and indexed. Authentication uses the separate unique normalized `UserCredential.normalizedEmail`; existing contact records are not automatically linked.
   Do not use this field as a login identifier until that policy is designed. This also avoids SQL
   Server's single-NULL limitation on ordinary unique constraints.
 

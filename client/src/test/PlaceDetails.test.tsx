@@ -332,7 +332,9 @@ describe('place details', () => {
     const invalidFetch = installApiMock();
     const invalid = renderApp('/places/not-a-uuid');
     expect(screen.getByRole('heading', { name: 'Invalid place link' })).toBeInTheDocument();
-    expect(invalidFetch).not.toHaveBeenCalled();
+    expect(invalidFetch.mock.calls.some(([input]) => String(input).includes('/places/'))).toBe(
+      false,
+    );
     invalid.unmount();
 
     installApiMock({ placeStatus: 404 });

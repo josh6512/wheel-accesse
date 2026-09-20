@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { authRouter } from '../modules/auth/auth.routes.js';
 import { accessibilityFeatureRouter } from '../modules/accessibilityFeatures/accessibilityFeature.routes.js';
 import {
   accessibilityReportRouter,
@@ -12,6 +13,7 @@ import { placeReviewRouter, reviewRouter } from '../modules/reviews/review.route
 import { searchRouter } from '../modules/search/search.routes.js';
 
 export const apiV1Router = Router();
+apiV1Router.use('/auth', authRouter);
 apiV1Router.use('/health', healthRouter);
 apiV1Router.use('/categories', categoryFeatureRouter);
 apiV1Router.use('/categories', categoryRouter);

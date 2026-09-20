@@ -66,8 +66,8 @@ plain-text community comments, show only the existing public display name when a
 include ordered safe review-media metadata. Review failures are isolated from place and
 accessibility content.
 
-There is no review composer. A restrained callout explains that publishing will be available after
-secure sign-in is implemented. No browser-supplied user ID and no unauthenticated write route is
+There is no review composer. A restrained callout explains that publishing is coming in a future
+release. Authentication now exists, but no browser-supplied user ID and no content write route is
 accepted.
 
 ## Resilience and accessibility

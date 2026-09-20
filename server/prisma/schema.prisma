@@ -19,15 +19,47 @@ model User {
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.DateTime2
   deletedAt   DateTime? @map("deleted_at") @db.DateTime2
 
-  mobilityTypes UserMobilityType[]
-  createdPlaces Place[]
-  reports       PlaceAccessibilityReport[]
-  reviews       Review[]
-  mediaAssets   MediaAsset[]
+  mobilityTypes   UserMobilityType[]
+  createdPlaces   Place[]
+  reports         PlaceAccessibilityReport[]
+  reviews         Review[]
+  mediaAssets     MediaAsset[]
+  credential      UserCredential?
+  refreshSessions RefreshSession[]
 
-  // Email uniqueness/authentication policy is deliberately deferred.
+  // Legacy contact lookup only; unique login identity lives in UserCredential.
   @@index([email])
   @@map("users")
+}
+
+// Login identity is separate from nullable legacy contact email.
+model UserCredential {
+  userId          String   @id @map("user_id") @db.UniqueIdentifier
+  normalizedEmail String   @unique @map("normalized_email") @db.NVarChar(254)
+  passwordHash    String   @map("password_hash") @db.NVarChar(512)
+  createdAt       DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime2
+  user            User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("user_credentials")
+}
+
+// Each rotation retains its predecessor for replay detection until family expiry.
+model RefreshSession {
+  id           String    @id @default(uuid()) @db.UniqueIdentifier
+  userId       String    @map("user_id") @db.UniqueIdentifier
+  familyId     String    @map("family_id") @db.UniqueIdentifier
+  tokenHash    String    @map("token_hash") @db.Char(64)
+  createdAt    DateTime  @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  expiresAt    DateTime  @map("expires_at") @db.DateTime2
+  revokedAt    DateTime? @map("revoked_at") @db.DateTime2
+  replacedById String?   @map("replaced_by_id") @db.UniqueIdentifier
+  user         User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([familyId, revokedAt])
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("refresh_sessions")
 }
 
 model MobilityType {

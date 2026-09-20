@@ -1,3 +1,56 @@
+.auth-page {
+  width: min(100% - 2rem, 30rem);
+  margin: 3rem auto;
+  padding: 2rem;
+  background: white;
+  border: 1px solid #dbe2da;
+  border-radius: 1.5rem;
+}
+.auth-page h1 {
+  font-size: 2.3rem;
+  margin: 0;
+}
+.auth-page form,
+.auth-page label {
+  display: grid;
+  gap: 0.6rem;
+}
+.auth-page form {
+  gap: 1.2rem;
+  margin: 1.5rem 0;
+}
+.auth-page input {
+  min-width: 0;
+  width: 100%;
+  min-height: 2.8rem;
+  border: 1px solid #60716d;
+  border-radius: 0.5rem;
+  padding: 0.65rem;
+}
+.auth-page button {
+  min-height: 2.8rem;
+}
+.auth-error {
+  color: #9c3c37;
+}
+.account-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.account-name {
+  max-width: 10rem;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 38rem) {
+  .account-name {
+    max-width: 5rem;
+    font-size: 0.8rem;
+  }
+  .auth-page {
+    padding: 1.25rem;
+  }
+}
 :root {
   font-family:
     Inter,

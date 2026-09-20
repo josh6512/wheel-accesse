@@ -1,10 +1,10 @@
 # Core API
 
 The first Wheel Accesses application API exposes database-driven category and accessibility-feature
-metadata plus place search, reads, and creation. Review and structured-report reads are documented
+metadata plus place search and reads. Review and structured-report reads are documented
 in [Community content API](community-content-api.md). The search contract and consensus rules are
-documented in [Place search API](place-search-api.md). Authentication, catalog mutations, and
-frontend UI are not implemented.
+documented in [Place search API](place-search-api.md). Authentication is documented in
+[Authentication and security](authentication.md). Product write routes remain unexposed.
 
 All routes are under `/api/v1`. Successful resource responses use a `data` envelope. Validation is
 strict: unknown body/query properties and malformed UUIDs are rejected with HTTP 400.
@@ -145,30 +145,11 @@ feature must be an active Boolean feature configured for that active category. S
 }
 ```
 
-### `POST /places`
+### Place creation is deferred
 
-Creates a basic place and returns HTTP 201. Accepted JSON properties are:
-
-- `name` — required, trimmed, 1–200 characters.
-- `categoryId` — required UUID for an existing active category.
-- `address` — optional non-empty text, at most 500 characters.
-- `city` and `region` — optional non-empty text, at most 120 characters each.
-- `countryCode` — optional two-letter code, normalized to uppercase.
-- `latitude` and `longitude` — optional finite numbers that must be supplied together; latitude is
-  limited to −90…90 and longitude to −180…180.
-
-No creator property is accepted. Until authentication exists, `createdById` is stored as null.
-
-```json
-{
-  "name": "Synthetic test place",
-  "categoryId": "11111111-1111-4111-8111-111111111111",
-  "city": "Test City",
-  "countryCode": "IL",
-  "latitude": 32.0853,
-  "longitude": 34.7818
-}
-```
+The older `POST /places` route binding has been removed. It returns 404, like the other
+unimplemented product writes. Existing internal validation/service helpers are retained for a
+future task that supplies trusted ownership and completes resource authorization and abuse rules.
 
 ## Errors
 

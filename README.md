@@ -140,10 +140,10 @@ API and database are available, or `503` with a safe `degraded` response when SQ
 reached.
 
 The core API provides read-only category and accessibility-feature catalogs, category-specific
-feature definitions, and place search/detail/creation. See [Core API](docs/core-api.md) and
+feature definitions, and place search/detail. See [Core API](docs/core-api.md) and
 [Place search API](docs/place-search-api.md).
 Community read APIs return independent plain-text reviews and typed accessibility reports. Their
-write routes remain deferred until authentication can supply trusted ownership. See
+write routes remain deferred pending ownership and abuse-control design. See
 [Community content API](docs/community-content-api.md).
 
 The web app provides `/`, `/search`, and `/places/:placeId`. Search state is stored in the URL so it
@@ -151,6 +151,13 @@ can be refreshed, shared, and preserved during pagination. The category and Bool
 filter labels are loaded from the API rather than hard-coded in the client. Place Details provides
 ordered media/fallback presentation, shared Boolean consensus, typed report evidence, and paginated
 reviews without enabling unauthenticated writes.
+
+Email/password authentication is available at `/login` and `/register`, with a private `/account`
+read page and header logout. Set a randomly generated `AUTH_ACCESS_SECRET` in ignored `server/.env`
+before starting the API; see the placeholder and defaults in `server/.env.example`.
+The additive `20260920153159_authentication_sessions` migration is applied locally.
+See [Authentication and security](docs/authentication.md) for token/session behavior, configuration,
+CSRF/CORS protections, tests, and deployment limitations. Content writes remain unexposed.
 
 ## Security and privacy baseline
 
@@ -161,13 +168,13 @@ reviews without enabling unauthenticated writes.
 - Request IDs support operational tracing without identifying users.
 - Structured logs redact authorization headers, cookies, passwords, tokens, and database URLs.
 - Database access remains server-side and centralized through Prisma.
-- The modular backend leaves room for authentication and authorization at module boundaries.
+- Reusable authentication middleware supplies trusted identity; future resource ownership checks remain separate.
 - Future private accessibility-profile information should use persistence and access rules separate
   from public profile data.
 
 ## Intentionally not implemented
 
-Authentication, authorization, user and mobility-profile APIs, catalog mutations, review/report
+Resource-specific authorization, mobility-profile APIs, catalog mutations, place/review/report
 write endpoints, non-Boolean accessibility filters, relevance ranking, duplicate detection,
 uploads, moderation, administration, personalization, matching, maps, caching, and the final
 interface are intentionally absent. Their initial data structures and migration are defined where

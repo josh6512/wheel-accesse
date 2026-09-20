@@ -17,7 +17,8 @@ export const errorHandler: ErrorRequestHandler = (error, request, response, _nex
   if (isKnownError) {
     logger.warn({ ...requestContext, code: error.code }, 'Request rejected');
   } else {
-    logger.error({ ...requestContext, err: error }, 'Request failed');
+    // Database/library errors can contain query arguments or credential input.
+    logger.error(requestContext, 'Request failed');
   }
 
   response.status(statusCode).json({

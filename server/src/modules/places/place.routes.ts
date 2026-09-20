@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { validateRequest } from '../../middleware/validateRequest.js';
-import { createPlaceHandler, getPlaceHandler } from './place.controller.js';
-import { createPlaceBodySchema, placeIdParamsSchema } from './place.validation.js';
+import { getPlaceHandler } from './place.controller.js';
+import { placeIdParamsSchema } from './place.validation.js';
 
 export const placeRouter = Router();
 
-placeRouter.post('/', validateRequest({ body: createPlaceBodySchema }), createPlaceHandler);
+// Content writes remain unexposed until their ownership and abuse rules are designed.
 placeRouter.get('/:id', validateRequest({ params: placeIdParamsSchema }), getPlaceHandler);

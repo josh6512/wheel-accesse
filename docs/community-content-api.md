@@ -124,8 +124,8 @@ until authentication, authorization, and withdrawal rules are implemented.
 
 There is intentionally no public `POST /reviews` or `POST /accessibility-reports` route. Accepting a
 user ID from an unauthenticated request would allow ownership spoofing. The service/repository and
-strict validation contracts exist, but can only be connected to routes after authentication supplies
-a trusted user ID.
+strict validation contracts exist. Authentication now supplies a trusted `request.auth.userId`, but
+write routes remain deferred until ownership authorization and abuse rules are implemented.
 
 The future authenticated report flow will:
 

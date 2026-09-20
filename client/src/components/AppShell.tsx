@@ -1,7 +1,22 @@
-import type { PropsWithChildren } from 'react';
+import { useState, type PropsWithChildren } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/useAuth';
 
 export function AppShell({ children }: PropsWithChildren) {
+  const { user, restoring, logout } = useAuth();
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  async function signOut() {
+    setBusy(true);
+    setError('');
+    try {
+      await logout();
+    } catch {
+      setError('Sign out failed. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <div className="app-shell">
       <header className="site-header">
@@ -12,19 +27,23 @@ export function AppShell({ children }: PropsWithChildren) {
           <span>Wheel Accesses</span>
         </Link>
         <nav aria-label="Account">
-          <button
-            className="account-placeholder"
-            type="button"
-            disabled
-            aria-label="Sign in, coming in a future release"
-            title="Account access is coming soon"
-          >
-            <span className="account-icon" aria-hidden="true">
-              ○
-            </span>
-            <span>Sign in</span>
-            <span className="soon-label">Soon</span>
-          </button>
+          {restoring ? (
+            <span role="status">Checking session…</span>
+          ) : user ? (
+            <div className="account-actions">
+              <Link to="/account" className="account-name" aria-label="Your account">
+                {user.displayName ?? 'Your account'}
+              </Link>
+              <button className="button" disabled={busy} onClick={() => void signOut()}>
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <Link className="button" to="/login">
+              Sign in
+            </Link>
+          )}
+          {error && <p role="alert">{error}</p>}
         </nav>
       </header>
       <main>{children}</main>

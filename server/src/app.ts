@@ -10,13 +10,19 @@ import { notFound } from './middleware/notFound.js';
 import { apiV1Router } from './routes/apiV1.js';
 
 export function createApp() {
+  if (!env.AUTH_ACCESS_SECRET)
+    throw new Error(
+      'Configure AUTH_ACCESS_SECRET in the ignored server/.env before starting the API.',
+    );
+  if (env.NODE_ENV === 'production' && new URL(env.CLIENT_ORIGIN).protocol !== 'https:')
+    throw new Error('Production CLIENT_ORIGIN must use HTTPS.');
   const app = express();
 
   app.disable('x-powered-by');
   app.use(helmet());
   app.use(
     cors({
-      origin: env.CLIENT_ORIGIN,
+      origin: (origin, callback) => callback(null, origin === env.CLIENT_ORIGIN),
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
@@ -25,11 +31,18 @@ export function createApp() {
   app.use(
     pinoHttp({
       logger,
-      genReqId: (request, response) => {
-        const existingId = request.headers['x-request-id'];
-        const requestId = typeof existingId === 'string' ? existingId : randomUUID();
+      genReqId: (_request, response) => {
+        const requestId = randomUUID();
         response.setHeader('X-Request-Id', requestId);
         return requestId;
+      },
+      serializers: {
+        req: (request) => ({
+          id: request.id,
+          method: request.method,
+          url: String(request.url).split('?')[0],
+        }),
+        res: (response) => ({ statusCode: response.statusCode }),
       },
     }),
   );

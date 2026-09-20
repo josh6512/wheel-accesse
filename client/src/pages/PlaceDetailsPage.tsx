@@ -101,8 +101,8 @@ export function PlaceDetailsPage() {
           <p className="section-kicker">Share your experience</p>
           <h2 id="share-experience-title">Help the next visitor</h2>
           <p>
-            Review publishing will become available after secure sign-in is introduced. No
-            unauthenticated submissions are accepted.
+            Review sharing is coming in a future release. For now, explore the community’s
+            observations.
           </p>
         </div>
         <button type="button" className="button button--secondary" disabled>
