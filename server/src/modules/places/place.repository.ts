@@ -1,6 +1,9 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../db/prisma.js';
 import type { CreatePlaceInput, ListPlaceQuery } from './place.validation.js';
+import { writeTransaction } from '../community/writeTransaction.js';
+import { ApiError } from '../../utils/ApiError.js';
+import { DuplicatePlaceError, likelyDuplicate } from './place.duplicates.js';
 
 const placeSelect = {
   id: true,
@@ -69,7 +72,7 @@ export interface PlaceRepository {
   findDetailsById(id: string): Promise<PlaceDetailsRecord | null>;
   findBooleanAccessibilitySummary(id: string): Promise<PlaceAccessibilitySummaryRow[]>;
   findActiveCategoryById(categoryId: string): Promise<{ id: string } | null>;
-  create(input: CreatePlaceInput): Promise<PlaceRecord>;
+  create(input: CreatePlaceInput, userId: string): Promise<PlaceRecord>;
   findMany(query: ListPlaceQuery): Promise<PlaceListResult>;
 }
 
@@ -131,20 +134,57 @@ export const placeRepository: PlaceRepository = {
       where: { id: categoryId, isActive: true },
       select: { id: true },
     }),
-  create: (input) =>
-    prisma.place.create({
-      data: {
-        name: input.name,
-        categoryId: input.categoryId,
-        address: input.address ?? null,
-        city: input.city ?? null,
-        region: input.region ?? null,
-        countryCode: input.countryCode ?? null,
-        latitude: input.latitude ?? null,
-        longitude: input.longitude ?? null,
-        createdById: null,
-      },
-      select: placeSelect,
+  create: (input, userId) =>
+    writeTransaction(async (tx) => {
+      const category = await tx.category.findFirst({
+        where: { id: input.categoryId, isActive: true },
+        select: { displayName: true },
+      });
+      if (!category)
+        throw new ApiError(
+          400,
+          'INVALID_CATEGORY',
+          'The selected category does not exist or is inactive.',
+        );
+      if (input.city && input.countryCode) {
+        // Serializable range locks keep check + insert atomic, including empty ranges.
+        // Read the country/category partition so whitespace normalization stays consistent.
+        const candidates = await tx.place.findMany({
+          where: { categoryId: input.categoryId, countryCode: input.countryCode, deletedAt: null },
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            countryCode: true,
+            address: true,
+            latitude: true,
+            longitude: true,
+          },
+        });
+        const matches = candidates
+          .map((candidate) => ({
+            ...candidate,
+            latitude: candidate.latitude?.toNumber() ?? null,
+            longitude: candidate.longitude?.toNumber() ?? null,
+          }))
+          .filter((candidate) => likelyDuplicate(input, candidate, category.displayName))
+          .slice(0, 5);
+        if (matches.length) throw new DuplicatePlaceError(matches);
+      }
+      return tx.place.create({
+        data: {
+          name: input.name,
+          categoryId: input.categoryId,
+          address: input.address ?? null,
+          city: input.city ?? null,
+          region: input.region ?? null,
+          countryCode: input.countryCode ?? null,
+          latitude: input.latitude ?? null,
+          longitude: input.longitude ?? null,
+          createdById: userId,
+        },
+        select: placeSelect,
+      });
     }),
   findMany: async (query) => {
     const where = activePlaceWhere(query);

@@ -3,6 +3,7 @@ export interface ApiErrorResponse {
     code: string;
     message: string;
     requestId?: string;
+    matches?: DuplicatePlace[];
   };
 }
 
@@ -123,7 +124,7 @@ export interface PublicAccessibilityReport {
   createdAt: string;
   updatedAt: string;
   place: { id: string; name: string };
-  author: { id: string; displayName: string | null } | null;
+  author: null;
   answers: Array<{
     feature: Pick<
       CategoryFeature,
@@ -137,3 +138,26 @@ export interface PaginatedAccessibilityReports {
   data: PublicAccessibilityReport[];
   pagination: Pagination;
 }
+
+export interface DuplicatePlace {
+  id: string;
+  name: string;
+  city: string | null;
+  countryCode: string | null;
+  address: string | null;
+}
+export interface NewPlace {
+  name: string;
+  categoryId: string;
+  city: string;
+  countryCode: string;
+  address?: string;
+  region?: string;
+  latitude?: number;
+  longitude?: number;
+}
+export type ReportAnswer =
+  | { featureId: string; type: 'boolean'; value: boolean }
+  | { featureId: string; type: 'numeric'; value: number }
+  | { featureId: string; type: 'text'; value: string }
+  | { featureId: string; type: 'select'; optionId: string };

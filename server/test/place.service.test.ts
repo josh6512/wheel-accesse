@@ -125,12 +125,14 @@ describe('place validation', () => {
 });
 
 describe('place service', () => {
-  it('creates a place without inventing ownership', async () => {
+  it('creates a place using trusted ownership', async () => {
     let capturedName: string | undefined;
     const result = await createPlace(
       { name: 'Temporary place', categoryId },
+      'trusted-user',
       repository({
-        create: async (input) => {
+        create: async (input, userId) => {
+          assert.equal(userId, 'trusted-user');
           capturedName = input.name;
           return place;
         },
@@ -145,6 +147,7 @@ describe('place service', () => {
       () =>
         createPlace(
           { name: 'Temporary place', categoryId },
+          'trusted-user',
           repository({ findActiveCategoryById: async () => null }),
         ),
       (error: unknown) =>

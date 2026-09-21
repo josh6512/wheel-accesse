@@ -28,10 +28,7 @@ export interface PublicAccessibilityReport {
     id: string;
     name: string;
   };
-  author: {
-    id: string;
-    displayName: string | null;
-  } | null;
+  author: null;
   answers: PublicAccessibilityAnswer[];
 }
 

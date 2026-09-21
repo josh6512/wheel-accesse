@@ -2,6 +2,7 @@ import type { ErrorRequestHandler } from 'express';
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { ApiError } from '../utils/ApiError.js';
+import { DuplicatePlaceError } from '../modules/places/place.duplicates.js';
 
 export const errorHandler: ErrorRequestHandler = (error, request, response, _next) => {
   const isKnownError = error instanceof ApiError;
@@ -26,6 +27,7 @@ export const errorHandler: ErrorRequestHandler = (error, request, response, _nex
       code: isKnownError ? error.code : 'INTERNAL_SERVER_ERROR',
       message: isKnownError ? error.message : 'An unexpected error occurred.',
       requestId: request.id,
+      ...(error instanceof DuplicatePlaceError ? { matches: error.matches } : {}),
       ...(env.NODE_ENV !== 'production' && isKnownError && error.details
         ? { details: error.details }
         : {}),

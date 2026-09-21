@@ -27,6 +27,9 @@ export function AppShell({ children }: PropsWithChildren) {
           <span>Wheel Accesses</span>
         </Link>
         <nav aria-label="Account">
+          <Link className="button" to="/places/new">
+            Add place
+          </Link>
           {restoring ? (
             <span role="status">Checking session…</span>
           ) : user ? (

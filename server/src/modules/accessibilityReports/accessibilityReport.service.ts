@@ -55,10 +55,7 @@ function toPublicReport(report: AccessibilityReportRecord): PublicAccessibilityR
     createdAt: report.createdAt,
     updatedAt: report.updatedAt,
     place: report.place,
-    author:
-      report.user && report.user.deletedAt === null
-        ? { id: report.user.id, displayName: report.user.displayName }
-        : null,
+    author: null,
     answers: report.answers.map(toPublicAnswer),
   };
 }
@@ -155,7 +152,7 @@ function prepareAnswer(
   return prepared;
 }
 
-// Intentionally not routed until authentication supplies a trusted user ID.
+// Caller supplies only the requireAuth identity, never an identity from the body.
 export async function submitAccessibilityReport(
   placeId: string,
   input: SubmitAccessibilityReportInput,

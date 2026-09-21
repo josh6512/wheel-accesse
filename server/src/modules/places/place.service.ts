@@ -65,7 +65,15 @@ export interface PlaceDetailsResponse extends PlaceResponse {
 
 function toPlaceResponse(place: PlaceRecord): PlaceResponse {
   return {
-    ...place,
+    id: place.id,
+    name: place.name,
+    address: place.address,
+    city: place.city,
+    region: place.region,
+    countryCode: place.countryCode,
+    createdAt: place.createdAt,
+    updatedAt: place.updatedAt,
+    category: place.category,
     latitude: place.latitude === null ? null : place.latitude.toNumber(),
     longitude: place.longitude === null ? null : place.longitude.toNumber(),
   };
@@ -128,6 +136,7 @@ export async function getPlace(
 
 export async function createPlace(
   input: CreatePlaceInput,
+  authenticatedUserId: string,
   repository: PlaceRepository = placeRepository,
 ): Promise<PlaceResponse> {
   const category = await repository.findActiveCategoryById(input.categoryId);
@@ -140,7 +149,7 @@ export async function createPlace(
   }
 
   try {
-    return toPlaceResponse(await repository.create(input));
+    return toPlaceResponse(await repository.create(input, authenticatedUserId));
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
       throw new ApiError(

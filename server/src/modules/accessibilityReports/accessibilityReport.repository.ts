@@ -14,13 +14,6 @@ const reportSelect = {
       name: true,
     },
   },
-  user: {
-    select: {
-      id: true,
-      displayName: true,
-      deletedAt: true,
-    },
-  },
   answers: {
     orderBy: [{ feature: { displayName: 'asc' } }, { featureId: 'asc' }],
     select: {
@@ -110,48 +103,53 @@ export interface AccessibilityReportRepository {
   ): Promise<AccessibilityReportRecord>;
 }
 
-export const accessibilityReportRepository: AccessibilityReportRepository = {
-  findForVisiblePlace: async (placeId, query) => {
-    const place = await prisma.place.findFirst({
-      where: { id: placeId, deletedAt: null, category: { isActive: true } },
-      select: {
-        reports: {
-          where: { deletedAt: null },
-          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-          skip: (query.page - 1) * query.pageSize,
-          take: query.pageSize,
-          select: reportSelect,
+export function accessibilityReportRepositoryFor(
+  prisma: Prisma.TransactionClient,
+): AccessibilityReportRepository {
+  return {
+    findForVisiblePlace: async (placeId, query) => {
+      const place = await prisma.place.findFirst({
+        where: { id: placeId, deletedAt: null, category: { isActive: true } },
+        select: {
+          reports: {
+            where: { deletedAt: null },
+            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+            skip: (query.page - 1) * query.pageSize,
+            take: query.pageSize,
+            select: reportSelect,
+          },
+          _count: {
+            select: { reports: { where: { deletedAt: null } } },
+          },
         },
-        _count: {
-          select: { reports: { where: { deletedAt: null } } },
-        },
-      },
-    });
+      });
 
-    return place ? { items: place.reports, total: place._count.reports } : null;
-  },
-  findPublicById: (id) =>
-    prisma.placeAccessibilityReport.findFirst({
-      where: {
-        id,
-        deletedAt: null,
-        place: { deletedAt: null, category: { isActive: true } },
-      },
-      select: reportSelect,
-    }),
-  findSubmissionContext: (placeId, featureIds) =>
-    prisma.place.findFirst({
-      where: { id: placeId, deletedAt: null, category: { isActive: true } },
-      select: submissionContextSelect(featureIds),
-    }),
-  create: (placeId, userId, observedAt, answers) =>
-    prisma.placeAccessibilityReport.create({
-      data: {
-        placeId,
-        userId,
-        observedAt,
-        answers: { create: answers },
-      },
-      select: reportSelect,
-    }),
-};
+      return place ? { items: place.reports, total: place._count.reports } : null;
+    },
+    findPublicById: (id) =>
+      prisma.placeAccessibilityReport.findFirst({
+        where: {
+          id,
+          deletedAt: null,
+          place: { deletedAt: null, category: { isActive: true } },
+        },
+        select: reportSelect,
+      }),
+    findSubmissionContext: (placeId, featureIds) =>
+      prisma.place.findFirst({
+        where: { id: placeId, deletedAt: null, category: { isActive: true } },
+        select: submissionContextSelect(featureIds),
+      }),
+    create: (placeId, userId, observedAt, answers) =>
+      prisma.placeAccessibilityReport.create({
+        data: {
+          placeId,
+          userId,
+          observedAt,
+          answers: { create: answers },
+        },
+        select: reportSelect,
+      }),
+  };
+}
+export const accessibilityReportRepository = accessibilityReportRepositoryFor(prisma);

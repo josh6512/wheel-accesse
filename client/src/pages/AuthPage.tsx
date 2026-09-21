@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 
 export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
@@ -7,7 +7,10 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const register = mode === 'register';
-  if (user) return <Navigate to="/" replace />;
+  const [params] = useSearchParams();
+  const requestedReturn = params.get('returnTo') ?? '';
+  const returnTo = /^\/places\/(new|[a-f0-9-]{36})$/i.test(requestedReturn) ? requestedReturn : '/';
+  if (user) return <Navigate to={returnTo} replace />;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -79,7 +82,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
       </form>
       <p>
         {register ? 'Already have an account? ' : 'New to Wheel Accesses? '}
-        <Link to={register ? '/login' : '/register'}>
+        <Link to={`${register ? '/login' : '/register'}?returnTo=${encodeURIComponent(returnTo)}`}>
           {register ? 'Sign in' : 'Create account'}
         </Link>
       </p>

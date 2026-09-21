@@ -60,7 +60,6 @@ const report: AccessibilityReportRecord = {
   createdAt: now,
   updatedAt: now,
   place: { id: placeId, name: 'Temporary place' },
-  user: { id: userId, displayName: 'Test author', deletedAt: null },
   answers: [
     storedAnswer(
       {
@@ -193,9 +192,8 @@ describe('accessibility report reads', () => {
 
   it('does not expose email or private mobility information', async () => {
     const result = await getAccessibilityReport(reportId, repository());
-    assert.deepEqual(result.author, { id: userId, displayName: 'Test author' });
-    assert.equal(result.author !== null && 'email' in result.author, false);
-    assert.equal(result.author !== null && 'mobilityTypes' in result.author, false);
+    assert.equal(result.author, null);
+    assert.equal(JSON.stringify(result).includes(userId), false);
   });
 });
 

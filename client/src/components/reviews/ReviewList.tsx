@@ -1,4 +1,6 @@
 import type { PaginatedReviews, PublicMedia, PublicReview } from '../../types/api';
+import { useAuth } from '../../auth/useAuth';
+import { ReviewOwnerControls } from '../community/ReviewOwnerControls';
 
 function formattedDate(value: string): string {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(value));
@@ -15,7 +17,14 @@ function publicImageSource(media: PublicMedia): string | null {
   }
 }
 
-function ReviewItem({ review }: { review: PublicReview }) {
+function ReviewItem({
+  review,
+  onSaved,
+}: {
+  review: PublicReview;
+  onSaved?: (message: string) => void;
+}) {
+  const { user } = useAuth();
   const images = review.media
     .map((media) => ({ media, source: publicImageSource(media) }))
     .filter((item): item is typeof item & { source: string } => item.source !== null);
@@ -32,6 +41,9 @@ function ReviewItem({ review }: { review: PublicReview }) {
         </div>
       </header>
       <p>{review.body}</p>
+      {user && review.author?.id === user.id && onSaved && (
+        <ReviewOwnerControls review={review} onSaved={onSaved} />
+      )}
       {images.length > 0 ? (
         <div className="review-media" aria-label="Review photos">
           {images.map(({ media, source }, index) => (
@@ -54,6 +66,7 @@ interface ReviewListProps {
   onRetry: () => void;
   onPrevious: () => void;
   onNext: () => void;
+  onSaved?: (message: string) => void;
 }
 
 export function ReviewList({
@@ -63,6 +76,7 @@ export function ReviewList({
   onRetry,
   onPrevious,
   onNext,
+  onSaved,
 }: ReviewListProps) {
   return (
     <section className="detail-section reviews-section" aria-labelledby="reviews-title">
@@ -91,16 +105,14 @@ export function ReviewList({
           <span aria-hidden="true">✦</span>
           <div>
             <h3>No reviews yet</h3>
-            <p>
-              Community reviews will appear here once authenticated contributions are available.
-            </p>
+            <p>Be the first to share your experience.</p>
           </div>
         </div>
       ) : (
         <>
           <div className="review-list">
             {reviews?.data.map((review) => (
-              <ReviewItem key={review.id} review={review} />
+              <ReviewItem key={review.id} review={review} {...(onSaved ? { onSaved } : {})} />
             ))}
           </div>
           {reviews ? (

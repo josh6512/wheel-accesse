@@ -22,7 +22,15 @@ const reportAnswerSchema = z.discriminatedUnion('type', [
   z.strictObject({
     featureId: z.uuid(),
     type: z.literal('numeric'),
-    value: z.number().finite(),
+    value: z
+      .number()
+      .finite()
+      .min(-99999999999999)
+      .max(99999999999999)
+      .refine(
+        (value) => Math.abs(value * 10000 - Math.round(value * 10000)) < 0.00001,
+        'Use at most four decimal places.',
+      ),
   }),
   z.strictObject({
     featureId: z.uuid(),
@@ -36,7 +44,6 @@ const reportAnswerSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
-// Used by the future authenticated controller. No public write route exists yet.
 export const submitAccessibilityReportBodySchema = z
   .strictObject({
     observedAt: z

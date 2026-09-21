@@ -23,7 +23,7 @@ export const getPlaceHandler: RequestHandler = async (request, response, next) =
 export const createPlaceHandler: RequestHandler = async (request, response, next) => {
   try {
     const input = request.validated?.body as CreatePlaceInput;
-    response.status(201).json({ data: await createPlace(input) });
+    response.status(201).json({ data: await createPlace(input, request.auth!.userId) });
   } catch (error) {
     next(error);
   }

@@ -144,7 +144,7 @@ const reports: PaginatedAccessibilityReports = {
       createdAt: '2026-01-03T00:00:00.000Z',
       updatedAt: '2026-01-03T00:00:00.000Z',
       place: { id: placeId, name: place.name },
-      author: { id: '60000000-0000-4000-8000-000000000001', displayName: 'Hidden reporter' },
+      author: null,
       answers: [
         { feature: entrance, value: { type: 'boolean', value: true } },
         { feature: bedHeight, value: { type: 'numeric', value: '55', unit: 'cm' } },

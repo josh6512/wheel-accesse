@@ -180,7 +180,7 @@ describe('HTTP authentication boundaries', () => {
       'AUTH_RATE_LIMITED',
     );
   });
-  it('keeps place, review and accessibility-report creation routes unexposed', async () => {
+  it('requires authentication for nested content writes and keeps unscoped creation unavailable', async () => {
     for (const path of [
       '/places',
       '/reviews',
@@ -193,7 +193,10 @@ describe('HTTP authentication boundaries', () => {
         headers: { origin: env.CLIENT_ORIGIN, 'content-type': 'application/json' },
         body: '{}',
       });
-      assert.equal(response.status, 404);
+      assert.equal(
+        response.status,
+        ['/reviews', '/accessibility-reports'].includes(path) ? 404 : 401,
+      );
     }
   });
 });

@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "test": "tsc -p tsconfig.test.json --noEmit --pretty false && tsx --test test/*.test.ts",
     "test:auth:database": "tsx --test test/database/auth.database.ts",
+    "test:community:database": "tsx --test test/database/community.database.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false && tsc -p tsconfig.prisma.json --noEmit --pretty false",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
