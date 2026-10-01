@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { PlaceDetails } from '../../types/api';
+import { ReportAction } from '../reporting/ReportAction';
 
 interface PlaceHeaderProps {
   place: PlaceDetails;
@@ -29,6 +30,12 @@ export function PlaceHeader({ place, backTo }: PlaceHeaderProps) {
           {place.reviewCount === 1 ? ' review' : ' reviews'}
         </p>
       </div>
+      <ReportAction
+        placeId={place.id}
+        targetType="PLACE"
+        targetId={place.id}
+        label="Report place"
+      />
     </header>
   );
 }

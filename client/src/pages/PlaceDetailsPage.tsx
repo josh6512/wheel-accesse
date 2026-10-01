@@ -93,7 +93,7 @@ export function PlaceDetailsPage() {
         {feedback}
       </p>
       <PlaceHeader place={place.data} backTo={backTo} />
-      <PlaceGallery media={place.data.media} placeName={place.data.name} />
+      <PlaceGallery media={place.data.media} placeName={place.data.name} placeId={placeId} />
       {user && (
         <MediaManager key={`${placeId}-${user.id}`} target="places" id={placeId} onSaved={saved} />
       )}

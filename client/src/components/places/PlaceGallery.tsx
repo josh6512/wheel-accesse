@@ -1,5 +1,6 @@
 import type { PublicMedia } from '../../types/api';
 import { SafeMediaImage } from '../media/SafeMediaImage';
+import { ReportAction } from '../reporting/ReportAction';
 
 function publicImageSource(reference: string): string | null {
   try {
@@ -13,9 +14,10 @@ function publicImageSource(reference: string): string | null {
 interface PlaceGalleryProps {
   media: PublicMedia[];
   placeName: string;
+  placeId?: string;
 }
 
-export function PlaceGallery({ media, placeName }: PlaceGalleryProps) {
+export function PlaceGallery({ media, placeName, placeId }: PlaceGalleryProps) {
   const images = media
     .filter(({ mimeType }) => mimeType.startsWith('image/'))
     .map((item) => ({ ...item, source: publicImageSource(item.storageReference) }))
@@ -47,6 +49,14 @@ export function PlaceGallery({ media, placeName }: PlaceGalleryProps) {
             src={image.source}
             alt={image.altText?.trim() || `${placeName} community photo ${index + 1}`}
           />
+          {placeId && (
+            <ReportAction
+              placeId={placeId}
+              targetType="PLACE_MEDIA"
+              targetId={image.id}
+              label={`Report place photo ${index + 1}`}
+            />
+          )}
         </figure>
       ))}
     </div>

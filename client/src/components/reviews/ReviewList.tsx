@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/useAuth';
 import { ReviewOwnerControls } from '../community/ReviewOwnerControls';
 import { MediaManager } from '../media/MediaManager';
 import { SafeMediaImage } from '../media/SafeMediaImage';
+import { ReportAction } from '../reporting/ReportAction';
 
 function formattedDate(value: string): string {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(value));
@@ -27,6 +28,8 @@ function ReviewItem({
   onSaved?: (message: string) => void;
 }) {
   const { user } = useAuth();
+  const ownReview = Boolean(user && review.author?.id === user.id);
+  const authorName = review.author?.displayName?.trim() || 'a community member';
   const images = review.media
     .map((media) => ({ media, source: publicImageSource(media) }))
     .filter((item): item is typeof item & { source: string } => item.source !== null);
@@ -43,17 +46,34 @@ function ReviewItem({
         </div>
       </header>
       <p>{review.body}</p>
+      {!ownReview && (
+        <ReportAction
+          placeId={review.place.id}
+          targetType="REVIEW"
+          targetId={review.id}
+          label={`Report review by ${authorName}`}
+        />
+      )}
       {user && review.author?.id === user.id && onSaved && (
         <ReviewOwnerControls review={review} onSaved={onSaved} />
       )}
       {images.length > 0 ? (
         <div className="review-media" aria-label="Review photos">
           {images.map(({ media, source }, index) => (
-            <SafeMediaImage
-              key={media.id}
-              src={source}
-              alt={media.altText?.trim() || `Review photo ${index + 1}`}
-            />
+            <div key={media.id} className="review-media-item">
+              <SafeMediaImage
+                src={source}
+                alt={media.altText?.trim() || `Review photo ${index + 1}`}
+              />
+              {!ownReview && (
+                <ReportAction
+                  placeId={review.place.id}
+                  targetType="REVIEW_MEDIA"
+                  targetId={media.id}
+                  label={`Report photo ${index + 1} in review by ${authorName}`}
+                />
+              )}
+            </div>
           ))}
         </div>
       ) : null}

@@ -26,6 +26,7 @@ model User {
   mediaAssets     MediaAsset[]
   credential      UserCredential?
   refreshSessions RefreshSession[]
+  contentReports   ContentReport[]
 
   // Legacy contact lookup only; unique login identity lives in UserCredential.
   @@index([email])
@@ -303,4 +304,25 @@ model ReviewMedia {
   @@id([reviewId, mediaAssetId])
   @@index([mediaAssetId])
   @@map("review_media")
+}
+
+// Polymorphic targets are resolved and authorized by the server before insert.
+// No client-provided target ID is treated as a foreign key to an arbitrary table.
+model ContentReport {
+  id             String   @id @default(uuid()) @db.UniqueIdentifier
+  reporterUserId String   @map("reporter_user_id") @db.UniqueIdentifier
+  targetType     String   @map("target_type") @db.NVarChar(32)
+  targetId       String   @map("target_id") @db.UniqueIdentifier
+  reason         String   @db.NVarChar(40)
+  details        String?  @db.NVarChar(1000)
+  status         String   @default("OPEN") @db.NVarChar(24)
+  createdAt      DateTime @default(dbgenerated("SYSUTCDATETIME()")) @map("created_at") @db.DateTime2
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime2
+
+  reporter User @relation(fields: [reporterUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([reporterUserId, targetType, targetId, reason])
+  @@index([targetType, targetId, status])
+  @@index([status, createdAt])
+  @@map("content_reports")
 }
