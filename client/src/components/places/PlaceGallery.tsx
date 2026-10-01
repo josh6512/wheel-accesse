@@ -1,4 +1,5 @@
 import type { PublicMedia } from '../../types/api';
+import { SafeMediaImage } from '../media/SafeMediaImage';
 
 function publicImageSource(reference: string): string | null {
   try {
@@ -42,7 +43,7 @@ export function PlaceGallery({ media, placeName }: PlaceGalleryProps) {
     <div className={`place-gallery${images.length === 1 ? ' place-gallery--single' : ''}`}>
       {images.map((image, index) => (
         <figure className={index === 0 ? 'gallery-primary' : 'gallery-supporting'} key={image.id}>
-          <img
+          <SafeMediaImage
             src={image.source}
             alt={image.altText?.trim() || `${placeName} community photo ${index + 1}`}
           />

@@ -1,4 +1,5 @@
 import { apiRequest, ApiError } from './apiClient';
+import { uploadImages, type SelectedImage } from './mediaService';
 import type { NewPlace, PublicReview, PublicAccessibilityReport, ReportAnswer } from '../types/api';
 
 function write<T>(path: string, method: string, body?: unknown) {
@@ -41,9 +42,11 @@ export async function addPlaceWithContributions(
   input: NewPlace,
   answers: ReportAnswer[],
   review: string,
+  images: SelectedImage[] = [],
 ) {
   const { data: place } = await createPlace(input);
   const messages = ['Place created successfully.'];
+  if (images.length) messages.push(await uploadImages('places', place.id, images));
   if (answers.length) {
     try {
       await publishReport(place.id, answers);

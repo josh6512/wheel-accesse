@@ -56,6 +56,7 @@ function api(
 ) {
   const mock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const path = new URL(String(input)).pathname;
+    if (path.endsWith('/media') && !init?.method) return json({ data: [] });
     if (path.endsWith('/categories'))
       return json({
         data: [

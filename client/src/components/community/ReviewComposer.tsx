@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import { ImagePicker } from '../media/ImagePicker';
+import { uploadImages, type SelectedImage } from '../../services/mediaService';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
 import { publishReview, writeError } from '../../services/communityService';
@@ -12,6 +14,7 @@ export function ReviewComposer({
 }) {
   const { user } = useAuth();
   const [body, setBody] = useState('');
+  const [images, setImages] = useState<SelectedImage[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   async function submit(event: FormEvent) {
@@ -23,9 +26,13 @@ export function ReviewComposer({
     setBusy(true);
     setError('');
     try {
-      await publishReview(placeId, body.trim());
+      const { data: review } = await publishReview(placeId, body.trim());
+      const uploadResult = images.length
+        ? ` ${await uploadImages('reviews', review.id, images)}`
+        : '';
       setBody('');
-      onSaved('Review published.');
+      setImages([]);
+      onSaved(`Review published.${uploadResult}`);
     } catch (reason) {
       setError(writeError(reason));
     } finally {
@@ -50,6 +57,7 @@ export function ReviewComposer({
             aria-describedby={error ? 'review-error' : undefined}
           />
           <p>Plain-text comments only. Avoid personal or sensitive information.</p>
+          <ImagePicker images={images} onChange={setImages} limit={3} disabled={busy} />
           {error && (
             <p id="review-error" role="alert">
               {error}

@@ -1,4 +1,5 @@
 import { ApiError } from '../../utils/ApiError.js';
+import { mediaUrl } from '../media/media.url.js';
 import { reviewRepository, type ReviewRecord, type ReviewRepository } from './review.repository.js';
 import type { PaginatedReviews, PublicReview } from './review.types.js';
 import type { CreateReviewInput, ReviewListQuery } from './review.validation.js';
@@ -16,7 +17,7 @@ function toPublicReview(review: ReviewRecord): PublicReview {
         : null,
     media: review.media.map(({ displayOrder, mediaAsset }) => ({
       id: mediaAsset.id,
-      storageReference: mediaAsset.storageKey,
+      storageReference: mediaUrl(mediaAsset.id, mediaAsset.storageKey),
       altText: mediaAsset.altText,
       mimeType: mediaAsset.mimeType,
       displayOrder,

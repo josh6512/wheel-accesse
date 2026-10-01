@@ -28,3 +28,7 @@ Thumbs.db
 
 # Local tooling state
 .sites-runtime/
+
+# Private local development uploads and temporary verification artifacts
+.data/
+.media-test/

@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import { ImagePicker } from '../components/media/ImagePicker';
+import type { SelectedImage } from '../services/mediaService';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { useCategories, useCategoryFeatures } from '../hooks/useApiResources';
@@ -15,6 +17,7 @@ export function AddPlacePage() {
   return <AddPlaceForm />;
 }
 function AddPlaceForm() {
+  const [images, setImages] = useState<SelectedImage[]>([]);
   const categories = useCategories();
   const [categoryId, setCategoryId] = useState('');
   const features = useCategoryFeatures(categoryId);
@@ -58,6 +61,7 @@ function AddPlaceForm() {
           input,
           reportAnswers(features.data, values),
           text('review'),
+          images,
         ),
       );
     } catch (reason) {
@@ -157,6 +161,7 @@ function AddPlaceForm() {
               </label>
             </div>
             {features.loading && <p role="status">Loading accessibility questions…</p>}
+            <ImagePicker images={images} onChange={setImages} limit={6} disabled={busy} />
             {features.error ? (
               <p role="alert">
                 Accessibility questions could not be loaded.{' '}

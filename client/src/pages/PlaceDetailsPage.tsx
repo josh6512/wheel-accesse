@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MediaManager } from '../components/media/MediaManager';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { AccessibilityEvidence } from '../components/places/AccessibilityEvidence';
 import { PlaceAccessibility } from '../components/places/PlaceAccessibility';
@@ -93,6 +94,9 @@ export function PlaceDetailsPage() {
       </p>
       <PlaceHeader place={place.data} backTo={backTo} />
       <PlaceGallery media={place.data.media} placeName={place.data.name} />
+      {user && (
+        <MediaManager key={`${placeId}-${user.id}`} target="places" id={placeId} onSaved={saved} />
+      )}
       <PlaceAccessibility
         summaries={place.data.accessibility}
         reportCount={place.data.accessibilityReportCount}

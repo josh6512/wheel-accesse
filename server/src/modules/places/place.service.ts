@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { mediaUrl } from '../media/media.url.js';
 import { deriveAccessibilityStatus } from '../search/search.aggregation.js';
 import { ApiError } from '../../utils/ApiError.js';
 import {
@@ -111,7 +112,7 @@ function toPlaceDetailsResponse(
     ...toPlaceResponse(place),
     media: place.media.map(({ displayOrder, mediaAsset }) => ({
       id: mediaAsset.id,
-      storageReference: mediaAsset.storageKey,
+      storageReference: mediaUrl(mediaAsset.id, mediaAsset.storageKey),
       altText: mediaAsset.altText,
       mimeType: mediaAsset.mimeType,
       displayOrder,

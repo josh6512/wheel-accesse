@@ -1773,3 +1773,50 @@ h2 {
     justify-content: flex-end;
   }
 }
+/* Bounded media controls also fit narrow screens and long descriptions. */
+.image-picker,
+.media-manager,
+.image-preview {
+  min-width: 0;
+  max-width: 100%;
+}
+.image-picker input[type='file'] {
+  max-width: 100%;
+  width: 100%;
+}
+.image-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 1rem;
+}
+.image-preview {
+  overflow-wrap: anywhere;
+  display: grid;
+  gap: 0.5rem;
+}
+.image-preview img {
+  width: 100%;
+  height: 160px;
+  object-fit: contain;
+}
+.media-manager {
+  margin-block: 1rem;
+}
+.media-remove {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.image-unavailable {
+  padding: 1rem;
+  min-width: 0;
+  background: #edf0ee;
+  color: #33433c;
+}
+.image-picker button,
+.media-remove button {
+  min-height: 44px;
+}

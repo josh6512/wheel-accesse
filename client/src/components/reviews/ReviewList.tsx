@@ -1,6 +1,8 @@
 import type { PaginatedReviews, PublicMedia, PublicReview } from '../../types/api';
 import { useAuth } from '../../auth/useAuth';
 import { ReviewOwnerControls } from '../community/ReviewOwnerControls';
+import { MediaManager } from '../media/MediaManager';
+import { SafeMediaImage } from '../media/SafeMediaImage';
 
 function formattedDate(value: string): string {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(value));
@@ -47,7 +49,7 @@ function ReviewItem({
       {images.length > 0 ? (
         <div className="review-media" aria-label="Review photos">
           {images.map(({ media, source }, index) => (
-            <img
+            <SafeMediaImage
               key={media.id}
               src={source}
               alt={media.altText?.trim() || `Review photo ${index + 1}`}
@@ -55,6 +57,14 @@ function ReviewItem({
           ))}
         </div>
       ) : null}
+      {user && review.author?.id === user.id && onSaved && (
+        <MediaManager
+          key={`${review.id}-${user.id}`}
+          target="reviews"
+          id={review.id}
+          onSaved={onSaved}
+        />
+      )}
     </article>
   );
 }

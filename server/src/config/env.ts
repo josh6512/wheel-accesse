@@ -4,6 +4,22 @@ import { z } from 'zod';
 const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
+  MEDIA_LOCAL_ROOT: z.string().min(1).optional(),
+  MEDIA_PUBLIC_BASE_URL: z
+    .string()
+    .url()
+    .refine((value) => {
+      const url = new URL(value);
+      return (
+        ['http:', 'https:'].includes(url.protocol) &&
+        !url.username &&
+        !url.password &&
+        !url.search &&
+        !url.hash &&
+        !value.endsWith('/')
+      );
+    })
+    .optional(),
   CLIENT_ORIGIN: z.string().url(),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   AUTH_ACCESS_SECRET: z
